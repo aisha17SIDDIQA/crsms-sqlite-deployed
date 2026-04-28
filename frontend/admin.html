@@ -244,7 +244,7 @@ async function loadChatUsers() {
   const list = document.getElementById("userList");
 
   list.innerHTML = data.map(u => `
-    <div class="user" onclick="openChat('${u.email}')">
+    <div class="user" data-email="${u.email}" onclick="openChat('${u.email}')">
       ${u.email}
     </div>
   `).join("");
@@ -286,7 +286,7 @@ function openChat(email) {
 
   socket.emit("join", email);
 
-  fetch(`${window.location.origin}/api/chat?email=${user.email}`)
+  fetch(`${window.location.origin}/api/chat?email=${email}`)
     .then(res => res.json())
     .then(messages => {
       const chat = document.getElementById("chatBox");

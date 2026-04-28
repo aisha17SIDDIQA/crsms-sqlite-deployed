@@ -175,9 +175,7 @@ input.addEventListener("input", () => {
 socket.emit("join", user.email);
 
 async function loadChat() {
-  const res = await fetch(
-  fetch(`${window.location.origin}/api/chat?email=${user.email}`)
-);
+  const res = await fetch(`${window.location.origin}/api/chat?email=${user.email}`);
 
   const data = await res.json();
 
