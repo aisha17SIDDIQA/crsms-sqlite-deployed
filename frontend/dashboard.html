@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Chat</title>
+
+<style>
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  background: #f5f5f5;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #111;
+}
+
+.header-buttons button {
+  margin-left: 10px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #111;
+  color: white;
+  cursor: pointer;
+}
+
+.header-buttons button:hover {
+  background: #333;
+}
+
+/* MAIN CHAT AREA */
+.chat-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* MESSAGES */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* CHAT BUBBLES */
+.message {
+  max-width: 60%;
+  padding: 12px 16px;
+  border-radius: 20px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.message {
+  word-break: break-word;
+}
+
+.messages {
+  scroll-behavior: smooth;
+}
+
+.message.user {
+  background: #111;
+  color: white;
+  margin-left: auto;
+}
+
+.message.other {
+  background: #eee;
+  color: #111;
+}
+
+.input-area {
+  display: flex;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.input-area button {
+  padding: 12px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #111;
+  color: white;
+  cursor: pointer;
+}
+
+.input-area button:hover {
+  background: #333;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1 id="welcome"></h1>
+
+  <div class="header-buttons">
+    <button onclick="goHome()">Home</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="chat-container">
+
+  <div class="messages" id="chatBox"></div>
+
+  <p id="typing" style="opacity:0.6; font-size:12px; margin:5px 10px;"></p>
+
+  <div class="input-area">
+    <input id="msgInput" placeholder="Type message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+</div>
+
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+
+<script>
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (!user) {
+  window.location.href = "auth.html";
+}
+
+document.getElementById("welcome").innerText = "Welcome " + user.name;
+
+const socket = io("http://localhost:3000");
+
+const input = document.getElementById("msgInput");
+
+input.addEventListener("input", () => {
+  socket.emit("typing", {
+    email: user.email,
+    sender: "user"
+  });
+
+  clearTimeout(window.typingTimeout);
+
+  window.typingTimeout = setTimeout(() => {
+    socket.emit("stop_typing", {
+      email: user.email,
+      sender: "user"
+    });
+  }, 1000);
+});
+
+socket.emit("join", user.email);
+
+async function loadChat() {
+  const res = await fetch(
+  `http://localhost:3000/api/chat?email=${user.email}`
+);
+
+  const data = await res.json();
+
+  const chat = document.getElementById("chatBox");
+  chat.innerHTML = "";
+
+data.forEach(m => {
+  chat.innerHTML += `
+    <div class="message ${m.sender === "admin" ? "other" : "user"}">
+      ${m.message}
+    </div>
+  `;
+});
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function sendMessage() {
+  const msg = document.getElementById("msgInput").value;
+
+  if (!msg) return;
+
+  socket.emit("send_message", {
+    email: user.email,
+    message: msg,
+    sender: "user"
+  });
+
+
+  document.getElementById("msgInput").value = "";
+}
+
+socket.on("receive_message", (data) => {
+  const chat = document.getElementById("chatBox");
+
+  chat.innerHTML += `
+    <div class="message user">${data.message}</div>
+  `;
+
+  chat.scrollTop = chat.scrollHeight;
+});
+
+socket.on("receive_reply", (data) => {
+  const chat = document.getElementById("chatBox");
+
+  chat.innerHTML += `
+    <div class="message other">${data.reply}</div>
+  `;
+
+  chat.scrollTop = chat.scrollHeight;
+});
+
+socket.on("typing", (data) => {
+  if (data.sender === "admin") {
+    document.getElementById("typing").innerText = "Admin is typing...";
+  }
+});
+
+socket.on("stop_typing", (data) => {
+  if (data.sender === "admin") {
+    document.getElementById("typing").innerText = "";
+  }
+});
+
+function logout() {
+  localStorage.removeItem("user");
+  window.location.href = "auth.html";
+}
+
+function goHome() {
+  window.location.href = "index.html";
+}
+
+loadChat();
+</script>
+
+</body>
+</html>
+

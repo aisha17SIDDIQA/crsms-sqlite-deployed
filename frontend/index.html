@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRSMS – Community Support System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  background: #f5f5f5;
+}
+
+.menu-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 24px;
+  color: white;
+  background: #111827;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100%;
+  background: white;
+  padding: 20px;
+  transform: translateX(-110%); /* 🔥 EXTRA PUSH */
+  transition: transform 0.3s ease;
+  z-index: 999;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+}
+
+.sidebar.active {
+  transform: translateX(0); /* ✅ SHOW */
+}
+
+.sidebar a {
+  display: block;
+  margin: 15px 0;
+  color: #111;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sidebar a:hover {
+  color: #7c3aed;
+}
+.hero {
+  position: relative;
+  height: 400px;
+  background: url("https://images.unsplash.com/photo-1521791136064-7986c2920216") center/cover no-repeat;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.65);
+}
+
+.hero-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 42px;
+  margin-bottom: 10px;
+  color: #111;
+}
+
+.hero-content p {
+  font-size: 18px;
+  margin-bottom: 0;
+  color: #333;
+}
+
+.hero-btn {
+  padding: 12px 25px;
+  border-radius: 25px;
+  border: none;
+  background: #e11d48;
+  color: white;
+  cursor: pointer;
+}
+
+.container {
+  width: 90%;
+  max-width: 1300px;
+  margin: auto;
+  margin-top: 30px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.categories {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+}
+
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: 0.3s;
+  min-width: 180px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.read-btn {
+  background: black;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.form-container {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  margin-top: 40px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.submit-btn {
+  width: 100%;
+  background: #000008;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="menu-btn" onclick="toggleSidebar()">☰</div>
+
+<div id="sidebar" class="sidebar">
+
+  <!-- 👤 USER INFO -->
+<div id="userInfo" style="margin-top:60px; margin-bottom:20px;"></div>
+
+  <!-- NAV -->
+   <div id="menuLinks"></div>
+
+  <a onclick="toggleServices()" style="cursor:pointer;">Services ▼</a>
+
+  <div id="serviceList" style="display:none; margin-left:10px;">
+    <a onclick="openService('housing')">Housing</a>
+    <a onclick="openService('food')">Food</a>
+    <a onclick="openService('mental')">Mental Health</a>
+    <a onclick="openService('financial')">Financial</a>
+    <a onclick="openService('youth')">Youth</a>
+  </div>
+
+  <a id="logoutBtn" href="#" onclick="logout()">Logout</a>
+
+</div>
+
+<div class="hero">
+  <div class="hero-content">
+    <h1>Community Support System</h1>
+    <p>Helping people access essential services quickly and efficiently.</p>
+  </div>
+</div>
+
+<div class="container">
+
+<h2>Services</h2>
+
+<div class="categories">
+  <div class="card" onclick="openService('housing')">
+    <h3>Housing Support</h3>
+    <p>Find housing assistance and emergency accommodation.</p>
+    <button class="read-btn">Read More</button>
+  </div>
+
+  <div class="card" onclick="openService('food')">
+    <h3>Food Support</h3>
+    <p>Access food banks and community kitchens.</p>
+    <button class="read-btn">Read More</button>
+  </div>
+
+  <div class="card" onclick="openService('mental')">
+    <h3>Mental Health</h3>
+    <p>Get mental health support and counselling services.</p>
+    <button class="read-btn">Read More</button>
+  </div>
+
+  <div class="card" onclick="openService('financial')">
+    <h3>Financial Support</h3>
+    <p>Help with budgeting, debt, and financial advice.</p>
+    <button class="read-btn">Read More</button>
+  </div>
+
+  <div class="card" onclick="openService('youth')">
+    <h3>Youth Services</h3>
+    <p>Support programs for young people.</p>
+    <button class="read-btn">Read More</button>
+  </div>
+</div>
+
+<div id="request" class="form-container">
+  <h3>Request Support</h3>
+
+  <form id="requestForm">
+    <input id="reqName" class="input-field" placeholder="Name" required>
+    <input id="reqEmail" class="input-field" placeholder="Email" required>
+    <textarea id="reqMessage" class="input-field" placeholder="Your situation..." required></textarea>
+
+    <button class="submit-btn" type="submit">Submit</button>
+    <p id="reqMsg"></p>
+  </form>
+</div>
+
+</div>
+
+<script>
+/* ================= USER ================= */
+const user = JSON.parse(localStorage.getItem("user"));
+const userInfo = document.getElementById("userInfo");
+const sidebar = document.getElementById("sidebar");
+const menuLinks = document.getElementById("menuLinks");
+
+if (user) {
+  if (user.role === "admin") {
+    // 🛠 ADMIN VIEW
+    menuLinks.innerHTML = `
+      <a href="admin.html">Admin Panel</a>
+    `;
+  } else {
+    // 👤 USER VIEW
+    menuLinks.innerHTML = `
+      <a href="#" onclick="event.preventDefault(); goToSupport()">Get Support</a>
+      <a href="#" onclick="goToRequests()">My Requests</a>
+    `;
+  }
+} else {
+  // 👤 NOT LOGGED IN
+  menuLinks.innerHTML = `
+    <a href="auth.html">Login</a>
+  `;
+}
+
+if (user) {
+  userInfo.innerHTML = `
+    <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+      
+      <div style="
+        width:60px;
+        height:60px;
+        background:#7c3aed;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:white;
+        font-size:20px;
+        font-weight:bold;
+        margin-bottom:10px;
+      ">
+        ${user.name ? user.name[0].toUpperCase() : "U"}
+      </div>
+
+      <div style="font-size:13px; word-break:break-all;">
+        ${user.email}
+      </div>
+
+    </div>
+    <hr style="margin:15px 0;">
+  `;
+
+} else {
+  userInfo.innerHTML = `
+    <a href="auth.html?mode=login">Login</a>
+<a href="auth.html?mode=register">Register</a>
+    <hr style="margin:15px 0;">
+  `;
+
+  // 🔥 REMOVE logout button if not logged in
+ const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) logoutBtn.remove();
+}
+
+/* ================= SIDEBAR ================= */
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("active");
+}
+
+/* ================= SERVICES ================= */
+function toggleServices() {
+  const list = document.getElementById("serviceList");
+  list.style.display = list.style.display === "block" ? "none" : "block";
+}
+
+/* ================= NAV ================= */
+function openService(type) {
+  window.location.href = `service.html?type=${type}`;
+}
+
+function goToSupport() {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user) {
+    window.location.href = "dashboard.html"; // chat page
+  } else {
+    window.location.href = "auth.html"; // login page
+  }
+}
+
+function goToRequests() {
+  window.location.href = "my-requests.html";
+}
+
+function logout() {
+  localStorage.removeItem("user");
+  window.location.href = "index.html";
+}
+
+/* ================= FORM ================= */
+document.getElementById("requestForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // 🔥 CHECK IF USER IS LOGGED IN
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const res = await fetch("http://localhost:3000/api/requests", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      name: reqName.value,
+      email: reqEmail.value,
+      message: reqMessage.value,
+    })
+  });
+
+  const data = await res.json();
+  document.getElementById("reqMsg").innerText = data.message || "Submitted ✅";
+  document.getElementById("requestForm").reset();
+});
+
+window.addEventListener("click", (e) => {
+  const sidebar = document.getElementById("sidebar");
+
+  if (
+    !e.target.closest(".sidebar") &&
+    !e.target.closest(".menu-btn")
+  ) {
+    sidebar.classList.remove("active");
+  }
+});
+</script>
+
+</body>
+</html>

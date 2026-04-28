@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Details</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+  font-family: "Inter", sans-serif;
+  background: #f5f6f8;
+  color: #111;
+  margin: 0;
+}
+
+.container {
+  width: 90%;
+  max-width: 1000px;
+  margin: auto;
+  padding: 30px;
+}
+
+/* TITLE */
+h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+/* CARDS */
+.section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* INPUTS */
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* BUTTON */
+button {
+  margin-top: 12px;
+  padding: 14px;
+  width: 100%;
+  background: #000;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #333;
+}
+
+/* MAP */
+#map {
+  height: 350px;
+  border-radius: 16px;
+  margin-top: 20px;
+}
+
+/* RESULTS TITLE */
+#results h3 {
+  margin-top: 20px;
+}
+
+/* RESULT CARDS */
+.card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  margin-top: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.card p {
+  margin: 5px 0;
+  color: #555;
+}
+
+#servicePanel {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+}
+
+#servicePanel button {
+  background: #000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1 id="title"></h1>
+
+<div class="section">
+  <h3>About this Service</h3>
+  <p id="description"></p>
+</div>
+
+<div class="section">
+  <h3>Find Services Near You</h3>
+  <input id="locationInput" placeholder="Enter your postcode (e.g. LS1)">
+  <input id="searchInput" placeholder="Search keyword (optional)">
+  <button onclick="searchNearby()">Search</button>
+</div>
+
+<div id="map"></div>
+<div id="servicePanel" style="
+  position: fixed;
+  bottom: -300px;
+  left: 0;
+  right: 0;
+  background: #111827;
+  color: white;
+  padding: 20px;
+  border-radius: 20px 20px 0 0;
+  transition: 0.3s;
+  z-index: 1000;
+">
+
+  <!-- ✅ CLOSE BUTTON -->
+  <span onclick="closePanel()" style="
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 22px;
+    cursor: pointer;
+  ">✕</span>
+
+  <h2 id="panelName"></h2>
+  <p id="panelAddress"></p>
+  <p id="panelDesc"></p>
+
+  <div style="margin-top:15px; display:flex; gap:10px;">
+    <button onclick="openDirections()">Directions</button>
+    <button onclick="openWebsite()">Website</button>
+    <button onclick="callService()">Call</button>
+  </div>
+
+</div>
+<div id="results"></div>
+
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDVTmTmgbr7aMYsyWCALksf8UKtSJ4Jphc"></script>
+<script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const type = params.get("type");
+
+const allServices = {
+
+  /* ================= MENTAL ================= */
+mental: [
+
+/* 🧠 NHS PRIMARY SERVICES */
+{
+  name: "Leeds Mental Wellbeing Service",
+  address: "White Rose Office Park, LS11 0DL",
+  postcode: "LS11",
+  phone: "0113 843 4388",
+  website: "https://leedsmentalwellbeingservice.co.uk",
+  desc: "Therapy for anxiety, depression, stress (self-referral)",
+  lat: 53.7465, lng: -1.5537
+},
+{
+  name: "Leeds and York Partnership NHS Trust",
+  address: "St Mary’s Road, LS7 3JX",
+  postcode: "LS7",
+  phone: "0113 855 5000",
+  website: "https://www.leedsandyorkpft.nhs.uk",
+  desc: "Specialist NHS mental health services",
+  lat: 53.8176, lng: -1.5336
+},
+{
+  name: "Leeds Community Mental Health Teams",
+  address: "Multiple Leeds locations",
+  postcode: "LS",
+  phone: "0113 855 5000",
+  website: "https://www.leedsandyorkpft.nhs.uk",
+  desc: "Community support and recovery services",
+  lat: 53.8008, lng: -1.5491
+},
+
+/* 🚨 CRISIS SUPPORT */
+{
+  name: "NHS 111 Mental Health",
+  address: "UK",
+  postcode: "",
+  phone: "111",
+  website: "https://111.nhs.uk",
+  desc: "24/7 urgent mental health help",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Here For You Leeds",
+  address: "Leeds",
+  postcode: "LS",
+  phone: "07760 173476",
+  website: "https://www.mindwell-leeds.org.uk",
+  desc: "Evening crisis support (3pm–9pm)",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Dial House Leeds",
+  address: "12 Chapel Street, LS15 7RW",
+  postcode: "LS15",
+  phone: "0113 260 9328",
+  website: "https://www.lslcs.org.uk",
+  desc: "Out-of-hours crisis safe space",
+  lat: 53.8009, lng: -1.4667
+},
+{
+  name: "Leeds Survivor Led Crisis Service",
+  address: "Leeds",
+  postcode: "LS",
+  phone: "0113 819 8189",
+  website: "https://www.lslcs.org.uk",
+  desc: "Alternative crisis support services",
+  lat: 53.8008, lng: -1.5491
+},
+
+/* 👶 YOUNG PEOPLE */
+{
+  name: "Leeds CAMHS Crisis Line",
+  address: "Leeds",
+  postcode: "",
+  phone: "0800 953 0505",
+  website: "https://www.leedscommunityhealthcare.nhs.uk",
+  desc: "Mental health support for under 18s",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Night OWLS",
+  address: "Leeds",
+  postcode: "",
+  phone: "0800 148 8244",
+  website: "https://www.lslcs.org.uk",
+  desc: "Overnight emotional support for young people",
+  lat: 53.8008, lng: -1.5491
+},
+
+/* 🌿 CHARITIES & SUPPORT */
+{
+  name: "MindWell Leeds",
+  address: "Leeds",
+  postcode: "",
+  phone: "",
+  website: "https://www.mindwell-leeds.org.uk",
+  desc: "Mental health services directory",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Samaritans",
+  address: "UK",
+  postcode: "",
+  phone: "116 123",
+  website: "https://www.samaritans.org",
+  desc: "24/7 emotional support",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Shout Crisis Text Service",
+  address: "UK",
+  postcode: "",
+  phone: "Text SHOUT to 85258",
+  website: "https://giveusashout.org",
+  desc: "24/7 text-based support",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Forward Leeds",
+  address: "Leeds",
+  postcode: "",
+  phone: "",
+  website: "https://www.forwardleeds.co.uk",
+  desc: "Addiction and mental health support",
+  lat: 53.8008, lng: -1.5491
+}
+
+],
+
+  /* ================= FOOD ================= */
+  food: [
+{
+  name: "Leeds North & West Foodbank",
+  address: "Burley Hill, LS4 2PU",
+  postcode: "LS4",
+  phone: "0113 269 2985",
+  website: "https://leedsnorthandwest.foodbank.org.uk",
+  desc: "Emergency food parcels",
+  lat: 53.809, lng: -1.578
+},
+{
+  name: "Leeds South & East Foodbank",
+  address: "LS11 0LR",
+  postcode: "LS11",
+  phone: "0113 277 2229",
+  website: "http://leedssouthandeast.foodbank.org.uk",
+  desc: "Multiple centres",
+  lat: 53.748, lng: -1.556
+},
+{
+  name: "Give a Gift Foodbank",
+  address: "LS8 4HS",
+  postcode: "LS8",
+  phone: "0113 380 5676",
+  website: "https://www.giveagift.org.uk",
+  desc: "Community donations",
+  lat: 53.820, lng: -1.515
+},
+{
+  name: "Salvation Army Leeds",
+  address: "LS11 6QB",
+  postcode: "LS11",
+  phone: "0113 242 3709",
+  website: "https://www.salvationarmy.org.uk",
+  desc: "Free food parcels",
+  lat: 53.742, lng: -1.546
+},
+{
+  name: "FoodCycle Leeds",
+  address: "LS11 6RD",
+  postcode: "LS11",
+  phone: "07485 325810",
+  website: "https://foodcycle.org.uk",
+  desc: "Free hot meals",
+  lat: 53.749, lng: -1.556
+},
+{
+  name: "St Aidan’s Food Drop-in",
+  address: "LS8 5QD",
+  postcode: "LS8",
+  phone: "07754 450967",
+  website: "https://leedsfoodaidnetwork.co.uk",
+  desc: "Free drop-in food",
+  lat: 53.819, lng: -1.523
+},
+{
+  name: "Meeting Point Leeds",
+  address: "LS12 3LE",
+  postcode: "LS12",
+  phone: "0113 279 6700",
+  website: "https://meetingpointleeds.org",
+  desc: "Meals + support",
+  lat: 53.792, lng: -1.594
+},
+{
+  name: "Blessed of the Father",
+  address: "LS4 2LE",
+  postcode: "LS4",
+  phone: "07745 748404",
+  website: "https://leedsfoodaidnetwork.co.uk",
+  desc: "Free food parcels",
+  lat: 53.810, lng: -1.577
+},
+{
+  name: "Winner’s Chapel Leeds",
+  address: "LS4 2LE",
+  postcode: "LS4",
+  phone: "0113 278 0483",
+  website: "https://leedsfoodaidnetwork.co.uk",
+  desc: "Community food support",
+  lat: 53.810, lng: -1.577
+},
+{
+  name: "PAFRAS Food Support",
+  address: "LS8 5QD",
+  postcode: "LS8",
+  phone: "0113 262 2163",
+  website: "https://pafras.org.uk",
+  desc: "Refugee food support",
+  lat: 53.819, lng: -1.523
+},
+{
+  name: "Leeds Food Aid Network",
+  address: "Leeds",
+  postcode: "LS",
+  phone: "",
+  website: "https://leedsfoodaidnetwork.co.uk",
+  desc: "Food support directory",
+  lat: 53.8008, lng: -1.5491
+}
+],
+
+  /* ================= FINANCIAL ================= */
+  financial: [
+
+/* 💸 FREE HELP */
+{
+  name: "Citizens Advice Leeds",
+  address: "Oxford House, LS1 3BE",
+  postcode: "LS1",
+  phone: "0808 278 7878",
+  website: "https://www.citizensadviceleeds.org.uk",
+  desc: "Free help with debt, benefits, and budgeting",
+  lat: 53.799, lng: -1.548
+},
+{
+  name: "Business Finance Advice",
+  address: "2 Infirmary St, LS1 2JP",
+  postcode: "LS1",
+  phone: "0330 133 7960",
+  website: "https://www.businessfinanceadvice.com",
+  desc: "Business funding and startup support",
+  lat: 53.800, lng: -1.547
+},
+
+/* 🏦 CREDIT UNIONS */
+{
+  name: "Leeds City Credit Union",
+  address: "190 Dewsbury Rd, LS11 6PF",
+  postcode: "LS11",
+  phone: "0113 242 3343",
+  website: "https://www.leedscreditunion.co.uk",
+  desc: "Low-interest loans and savings",
+  lat: 53.783, lng: -1.547
+},
+{
+  name: "Leeds Credit Union Head Office",
+  address: "Leeds",
+  postcode: "LS",
+  phone: "0113 242 3343",
+  website: "http://leedscreditunion.co.uk",
+  desc: "Main branch of credit union",
+  lat: 53.8008, lng: -1.5491
+},
+
+/* 💰 LOANS */
+{
+  name: "Evlo Leeds",
+  address: "14 King St, LS1 2HL",
+  postcode: "LS1",
+  phone: "0113 234 3567",
+  website: "https://www.evlo.co.uk",
+  desc: "Personal loan services",
+  lat: 53.800, lng: -1.547
+},
+{
+  name: "Leeds Logbook Loans",
+  address: "243 Selby Rd, LS15 7JR",
+  postcode: "LS15",
+  phone: "0800 112 3200",
+  website: "",
+  desc: "Loans secured against vehicles (high risk)",
+  lat: 53.794, lng: -1.455
+},
+{
+  name: "Your Loan Shop",
+  address: "Leeds LS2 8NG",
+  postcode: "LS2",
+  phone: "",
+  website: "",
+  desc: "Various loan options",
+  lat: 53.803, lng: -1.545
+},
+
+/* 📊 FINANCIAL ADVISORS */
+{
+  name: "The Financial Advice Service",
+  address: "The Headrow, LS1 5JW",
+  postcode: "LS1",
+  phone: "0800 888 6100",
+  website: "https://tfas.com",
+  desc: "Investments and pensions advice",
+  lat: 53.800, lng: -1.546
+},
+{
+  name: "Agile Independent Financial Advice",
+  address: "423 Kirkstall Rd, LS4 2EW",
+  postcode: "LS4",
+  phone: "0113 873 0202",
+  website: "http://www.agileifa.co.uk",
+  desc: "Wealth management and retirement planning",
+  lat: 53.810, lng: -1.574
+},
+{
+  name: "Rockwealth Financial Adviser",
+  address: "1 Park Row, LS1 5HN",
+  postcode: "LS1",
+  phone: "0113 526 6022",
+  website: "https://www.leedsifa.co.uk",
+  desc: "Fixed-fee financial advice",
+  lat: 53.799, lng: -1.547
+},
+{
+  name: "Cove Financial Planning",
+  address: "2 Infirmary St, LS1 2JP",
+  postcode: "LS1",
+  phone: "0113 880 5515",
+  website: "http://covefp.co.uk",
+  desc: "Personal finance and investments",
+  lat: 53.800, lng: -1.547
+},
+{
+  name: "Informed Financial Planning",
+  address: "9 Park Square E, LS1 2LH",
+  postcode: "LS1",
+  phone: "0113 230 5566",
+  website: "http://www.informedfinancialplanning.co.uk",
+  desc: "Financial planning services",
+  lat: 53.798, lng: -1.548
+},
+{
+  name: "Vibrant Wealth Management",
+  address: "Vicar Ln, LS2 7JF",
+  postcode: "LS2",
+  phone: "0113 372 0382",
+  website: "https://vibrantwealthmanagement.co.uk",
+  desc: "Wealth management services",
+  lat: 53.801, lng: -1.541
+},
+{
+  name: "The Private Office",
+  address: "The Bourse, LS1 5DE",
+  postcode: "LS1",
+  phone: "0333 323 9065",
+  website: "https://www.theprivateoffice.com",
+  desc: "Chartered financial planners",
+  lat: 53.799, lng: -1.547
+},
+{
+  name: "Lazenby’s Financial Services",
+  address: "Roundhay, LS8 2LQ",
+  postcode: "LS8",
+  phone: "0113 322 0700",
+  website: "https://lazenbysfs.co.uk",
+  desc: "Pensions and investment advice",
+  lat: 53.829, lng: -1.505
+},
+{
+  name: "Verdure Financial",
+  address: "The Rose Bowl, LS1 3HB",
+  postcode: "LS1",
+  phone: "",
+  website: "http://www.verdurefinancial.co.uk",
+  desc: "Mortgage advice",
+  lat: 53.801, lng: -1.548
+},
+{
+  name: "Ultimate Finance Leeds",
+  address: "47 St Paul’s St, LS1 2TE",
+  postcode: "LS1",
+  phone: "0800 121 7757",
+  website: "https://www.ultimatefinance.co.uk",
+  desc: "Business loans and funding",
+  lat: 53.800, lng: -1.548
+}
+
+],
+
+  /* ================= HOUSING ================= */
+ housing: [
+
+/* 🆘 EMERGENCY SHELTERS */
+{
+  name: "St George’s Crypt",
+  address: "Great George St, LS1 3BR",
+  postcode: "LS1",
+  phone: "0113 245 9061",
+  website: "http://www.stgeorgescrypt.org.uk",
+  desc: "Emergency accommodation, food and rehab support",
+  lat: 53.799, lng: -1.548
+},
+{
+  name: "Regents Lodge",
+  address: "22 Regent Terrace, LS6 1NP",
+  postcode: "LS6",
+  phone: "0113 245 8836",
+  website: "",
+  desc: "Supported housing for vulnerable adults",
+  lat: 53.809, lng: -1.569
+},
+{
+  name: "Palm Cove Society",
+  address: "26 St Michael’s Rd, LS6 3AW",
+  postcode: "LS6",
+  phone: "0113 230 2271",
+  website: "http://www.palmcovesociety.com",
+  desc: "Hostel accommodation for vulnerable individuals",
+  lat: 53.818, lng: -1.574
+},
+
+/* 🏠 SUPPORTED HOUSING */
+{
+  name: "Beacon Leeds",
+  address: "3A Cross Francis St, LS7 4BZ",
+  postcode: "LS7",
+  phone: "0113 262 0648",
+  website: "http://turninglivesaround.co.uk",
+  desc: "Supported housing for complex needs",
+  lat: 53.818, lng: -1.534
+},
+{
+  name: "St Anne’s Resource Centre",
+  address: "66 York St, LS9 8AA",
+  postcode: "LS9",
+  phone: "0113 281 6906",
+  website: "",
+  desc: "Emergency housing and mental health support",
+  lat: 53.797, lng: -1.526
+},
+{
+  name: "Cygnet Supported Living",
+  address: "Cockshott Gardens, LS12 2DT",
+  postcode: "LS12",
+  phone: "0113 487 9913",
+  website: "",
+  desc: "Supported living for vulnerable adults",
+  lat: 53.794, lng: -1.597
+},
+{
+  name: "Canopy Housing",
+  address: "66 Burley Lodge Rd, LS6 1QF",
+  postcode: "LS6",
+  phone: "0113 294 6868",
+  website: "http://www.canopyhousing.org",
+  desc: "Affordable housing for homeless and refugees",
+  lat: 53.807, lng: -1.571
+},
+{
+  name: "Gascoigne House",
+  address: "Middleton, LS10 4YA",
+  postcode: "LS10",
+  phone: "0113 535 0010",
+  website: "http://www.leedshomes.org.uk",
+  desc: "Social housing for low-income residents",
+  lat: 53.760, lng: -1.537
+},
+
+/* 🌍 REFUGEE SUPPORT */
+{
+  name: "Leeds Refugee Forum",
+  address: "Cromwell St, LS9 7SG",
+  postcode: "LS9",
+  phone: "0113 244 9600",
+  website: "https://www.leedsrefugeeforum.org.uk",
+  desc: "Housing advice for refugees",
+  lat: 53.799, lng: -1.525
+},
+{
+  name: "PAFRAS Housing Support",
+  address: "Roundhay Rd, LS7 1AB",
+  postcode: "LS7",
+  phone: "0113 262 2163",
+  website: "http://www.pafras.org.uk",
+  desc: "Support for asylum seekers",
+  lat: 53.813, lng: -1.528
+},
+{
+  name: "Abigail Housing",
+  address: "Woodhouse St, LS6 2NY",
+  postcode: "LS6",
+  phone: "07743 189314",
+  website: "http://www.abigailhousing.org.uk",
+  desc: "Housing for refugees",
+  lat: 53.807, lng: -1.557
+},
+{
+  name: "Migration Yorkshire",
+  address: "Merrion House, LS2 8BB",
+  postcode: "LS2",
+  phone: "0113 378 8188",
+  website: "http://migrationyorkshire.org.uk",
+  desc: "Housing advice for migrants",
+  lat: 53.800, lng: -1.543
+},
+
+/* 👵 ELDERLY HOUSING */
+{
+  name: "Lady Ida Lodge",
+  address: "120 Oak Park Ln, LS16 6FT",
+  postcode: "LS16",
+  phone: "0370 192 4208",
+  website: "https://www.housing21.org.uk",
+  desc: "Retirement housing",
+  lat: 53.858, lng: -1.606
+},
+{
+  name: "Holmwood Sheltered Housing",
+  address: "Park Crescent, LS8 1DH",
+  postcode: "LS8",
+  phone: "0113 268 8448",
+  website: "",
+  desc: "Sheltered housing for elderly",
+  lat: 53.828, lng: -1.506
+},
+{
+  name: "Bracken House",
+  address: "LS12 6LQ",
+  postcode: "LS12",
+  phone: "0113 245 8091",
+  website: "https://www.riverside.org.uk",
+  desc: "Supported elderly housing",
+  lat: 53.794, lng: -1.600
+},
+{
+  name: "Sanctuary Housing",
+  address: "LS14 2EU",
+  postcode: "LS14",
+  phone: "0800 131 3348",
+  website: "https://www.sanctuary-housing.co.uk",
+  desc: "Sheltered housing support",
+  lat: 53.827, lng: -1.462
+},
+
+/* 🚶 OUTREACH */
+{
+  name: "Simon on the Streets",
+  address: "94 Armley Rd, LS12 2EJ",
+  postcode: "LS12",
+  phone: "0113 345 2270",
+  website: "http://www.simononthestreets.co.uk",
+  desc: "Support for rough sleepers",
+  lat: 53.798, lng: -1.580
+},
+{
+  name: "Homeless Street Angels",
+  address: "Sheepscar Ct, LS7 2BB",
+  postcode: "LS7",
+  phone: "0113 805 0474",
+  website: "http://www.homelessstreetangels.co.uk",
+  desc: "Outreach and rehousing",
+  lat: 53.813, lng: -1.536
+},
+
+/* 🏛️ COUNCIL */
+{
+  name: "Leeds Housing Options",
+  address: "Merrion House, LS2 8BB",
+  postcode: "LS2",
+  phone: "0113 222 4412",
+  website: "https://www.leeds.gov.uk/housing",
+  desc: "Council housing and emergency help",
+  lat: 53.800, lng: -1.543
+}
+
+],
+
+  /* ================= YOUTH ================= */
+  youth: [
+
+/* ⚽ SPORTS & ACTIVITY CENTRES */
+{
+  name: "John Charles Centre for Sport",
+  address: "Middleton Grove, LS11 5DJ",
+  postcode: "LS11",
+  phone: "0113 378 6000",
+  website: "https://active.leeds.gov.uk",
+  desc: "Gym, football, athletics and youth fitness programmes",
+  lat: 53.760, lng: -1.549
+},
+{
+  name: "West Leeds Activity Centre",
+  address: "Lenhurst Avenue, LS12 2RE",
+  postcode: "LS12",
+  phone: "0113 378 1275",
+  website: "https://active.leeds.gov.uk",
+  desc: "Outdoor activities like climbing and kayaking",
+  lat: 53.792, lng: -1.603
+},
+{
+  name: "Leeds City Athletic Club",
+  address: "John Charles Centre, LS11 5DJ",
+  postcode: "LS11",
+  phone: "",
+  website: "https://www.leedscityac.org",
+  desc: "Youth athletics training club",
+  lat: 53.760, lng: -1.549
+},
+
+/* 🎯 YOUTH CLUBS */
+{
+  name: "Leeds Youth Service",
+  address: "Various locations, Leeds",
+  postcode: "LS",
+  phone: "0113 222 4403",
+  website: "https://www.leeds.gov.uk",
+  desc: "Free youth clubs, wellbeing and life skills",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "St Matthew’s Youth Club",
+  address: "Holbeck, LS11 9NR",
+  postcode: "LS11",
+  phone: "",
+  website: "https://wellwave.info",
+  desc: "Youth drop-in sessions and support",
+  lat: 53.783, lng: -1.553
+},
+{
+  name: "Leeds Youth Alliance",
+  address: "Kitson Road, LS10 1NT",
+  postcode: "LS10",
+  phone: "0113 532 5357",
+  website: "https://www.leedsyouthalliance.com",
+  desc: "Youth mentoring and outreach programmes",
+  lat: 53.791, lng: -1.532
+},
+{
+  name: "YMCA Leeds",
+  address: "Otley Road, LS16 6HE",
+  postcode: "LS16",
+  phone: "0113 261 2484",
+  website: "https://www.leedsymca.org",
+  desc: "Sports, gym and youth development programmes",
+  lat: 53.844, lng: -1.592
+},
+{
+  name: "BID Youth Club",
+  address: "Various Leeds venues",
+  postcode: "LS",
+  phone: "0113 288 5750",
+  website: "https://bid.org.uk",
+  desc: "Inclusive youth activities for disabilities",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Leeds Mencap Youth Groups",
+  address: "Vinery Centre, LS9 9LU",
+  postcode: "LS9",
+  phone: "0113 235 1331",
+  website: "https://www.leedsmencap.org.uk",
+  desc: "Youth clubs for disabled young people",
+  lat: 53.795, lng: -1.525
+},
+
+/* 🧠 YOUTH MENTAL SUPPORT */
+{
+  name: "Leeds Mental Wellbeing Service",
+  address: "White Rose Office Park, LS11 0DL",
+  postcode: "LS11",
+  phone: "0113 843 4388",
+  website: "https://leedsmentalwellbeingservice.co.uk",
+  desc: "Therapy for anxiety and depression (16+)",
+  lat: 53.7465, lng: -1.5537
+},
+{
+  name: "Leeds CAMHS",
+  address: "Various NHS locations",
+  postcode: "LS",
+  phone: "0800 953 0505",
+  website: "https://www.leedscommunityhealthcare.nhs.uk",
+  desc: "Mental health services for children and teens",
+  lat: 53.8008, lng: -1.5491
+},
+{
+  name: "Leeds Teaching Hospitals Youth Service",
+  address: "Leeds General Infirmary, LS1 3EX",
+  postcode: "LS1",
+  phone: "0113 243 2799",
+  website: "https://www.leedsth.nhs.uk",
+  desc: "Support for young people in hospitals",
+  lat: 53.801, lng: -1.549
+},
+{
+  name: "Leeds Youth Justice Service",
+  address: "Church Street, LS10 2AY",
+  postcode: "LS10",
+  phone: "0113 378 2055",
+  website: "https://www.leeds.gov.uk",
+  desc: "Support for at-risk youth",
+  lat: 53.778, lng: -1.531
+},
+
+/* 🎨 EXTRA SUPPORT */
+{
+  name: "Barca Leeds Youth Work",
+  address: "Upper Town St, LS12 6NG",
+  postcode: "LS12",
+  phone: "0113 255 9582",
+  website: "https://www.barca-leeds.org",
+  desc: "Youth clubs and emotional support",
+  lat: 53.792, lng: -1.600
+},
+{
+  name: "Re:Establish Youth Services",
+  address: "Beeston & Holbeck",
+  postcode: "LS11",
+  phone: "",
+  website: "https://wearechildfriendlyleeds.com",
+  desc: "Youth activities including arts and sports",
+  lat: 53.780, lng: -1.556
+}
+
+]
+
+};
+
+let map;
+let markers = [];
+let markerCluster;
+let currentService = null;
+
+/* TITLE */
+const content = {
+  mental: { title: "Mental Health Support", desc: "Find mental health services" },
+  food: { title: "Food Support", desc: "Access food banks and meals" },
+  housing: { title: "Housing Support", desc: "Find housing and shelters" },
+  financial: { title: "Financial Support", desc: "Get financial help and advice" },
+  youth: { title: "Youth Services", desc: "Support for young people" }
+};
+
+document.getElementById("title").innerText = content[type]?.title || "Service";
+document.getElementById("description").innerText = content[type]?.desc || "";
+
+/* MAP INIT */
+function initMap(lat = 53.8008, lng = -1.5491) {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat, lng },
+    zoom: 12,
+  });
+}
+initMap();
+
+/* AUTO LOAD ALL MARKERS */
+function loadAllMarkers() {
+  let services = allServices[type] || [];
+
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  if (markerCluster) markerCluster.clearMarkers();
+
+  const bounds = new google.maps.LatLngBounds();
+
+  services.forEach(s => {
+
+    const marker = new google.maps.Marker({
+      position: {
+        lat: s.lat + (Math.random() * 0.002),
+        lng: s.lng + (Math.random() * 0.002)
+      },
+      title: s.name
+    });
+
+    markers.push(marker);
+    bounds.extend(marker.getPosition());
+
+    const info = new google.maps.InfoWindow({
+      content: `<h3>${s.name}</h3><p>${s.address}</p>`
+    });
+
+   marker.addListener("click", () => {
+  showDetails(s);
+});
+  });
+
+  markerCluster = new markerClusterer.MarkerClusterer({
+    map,
+    markers
+  });
+
+  map.fitBounds(bounds);
+}
+
+/* SEARCH */
+async function searchNearby() {
+  const postcode = document.getElementById("locationInput").value.trim();
+  if (!postcode) return alert("Enter postcode");
+
+  try {
+    const res = await fetch(`https://api.postcodes.io/postcodes/${postcode}`);
+    const data = await res.json();
+
+    initMap(data.result.latitude, data.result.longitude);
+    loadServices(data.result.latitude, data.result.longitude);
+
+  } catch {
+    alert("Invalid postcode");
+  }
+}
+
+/* LOAD SERVICES (FILTER + SORT) */
+function loadServices(userLat, userLng) {
+  const startTime = performance.now();
+
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  if (markerCluster) markerCluster.clearMarkers();
+
+  const postcodeInput = document.getElementById("locationInput").value.toUpperCase();
+  const search = document.getElementById("searchInput").value.toLowerCase();
+
+  let services = allServices[type] || [];
+  let filtered = services;
+
+  if (postcodeInput) {
+    filtered = filtered.filter(s =>
+      s.postcode.toUpperCase().includes(postcodeInput.substring(0,3))
+    );
+  }
+
+  if (search) {
+    filtered = filtered.filter(s =>
+      s.name.toLowerCase().includes(search)
+    );
+  }
+
+  const servicesWithDistance = filtered.map(s => ({
+    ...s,
+    distanceKm: calculateDistance(userLat, userLng, s.lat, s.lng)
+  }));
+
+  servicesWithDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+
+  const results = document.getElementById("results");
+  results.innerHTML = `<h3 style="margin-top:20px;">Nearby ${content[type].title}</h3>`;
+
+  servicesWithDistance.forEach(s => {
+
+    const marker = new google.maps.Marker({
+      position: {
+        lat: s.lat + (Math.random() * 0.002),
+        lng: s.lng + (Math.random() * 0.002)
+      },
+      title: s.name
+    });
+
+    markers.push(marker);
+
+    const info = new google.maps.InfoWindow({
+      content: `<h3>${s.name}</h3><p>${s.address}</p>`
+    });
+
+    marker.addListener("click", () => {
+      info.open(map, marker);
+      showDetails(s);
+    });
+
+    results.innerHTML += `
+      <div class="card" onclick='showDetails(${JSON.stringify(s)})'>
+        <h3>${s.name}</h3>
+        <p>${s.address}</p>
+        <p><strong>Distance:</strong> ${s.distanceKm.toFixed(2)} km</p>
+      </div>
+    `;
+  });
+
+  markerCluster = new markerClusterer.MarkerClusterer({
+    map,
+    markers
+  });
+  const endTime = performance.now();
+const executionTimeMs = endTime - startTime;
+
+fetch("http://localhost:3000/api/search-log", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    postcode: document.getElementById("locationInput").value.toUpperCase(),
+    category: type,
+    results: servicesWithDistance.map(s => ({
+      serviceName: s.name,
+      servicePostcode: s.postcode,
+      distanceKm: s.distanceKm
+    })),
+    executionTimeMs
+  })
+})
+.then(res => res.json())
+.then(data => console.log("✅ Logged:", data))
+.catch(err => console.error("❌ Log error:", err));
+}
+
+/* DETAILS PANEL */
+function showDetails(s) {
+  currentService = s;
+
+  const panel = document.getElementById("servicePanel");
+  panel.style.bottom = "0px";
+
+  document.getElementById("panelName").innerText = s.name;
+  document.getElementById("panelAddress").innerText = s.address;
+  document.getElementById("panelDesc").innerText = s.desc || "";
+
+  map.setCenter({ lat: s.lat, lng: s.lng });
+  map.setZoom(14);
+}
+
+function closePanel() {
+  document.getElementById("servicePanel").style.bottom = "-300px";
+  currentService = null;
+}
+
+/* BUTTON ACTIONS */
+function openDirections() {
+  if (!currentService) return;
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${currentService.lat},${currentService.lng}`);
+}
+
+function openWebsite() {
+  if (!currentService?.website) return;
+  window.open(currentService.website);
+}
+
+function callService() {
+  if (!currentService?.phone) return;
+  window.location.href = `tel:${currentService.phone}`;
+}
+
+/* DISTANCE */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+/* LOAD ON PAGE OPEN */
+window.onload = () => {
+  loadAllMarkers();
+};
+</script>
+
+</body>
+</html>

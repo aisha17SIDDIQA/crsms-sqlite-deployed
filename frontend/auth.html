@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRSMS - Login / Register</title>
+  <style>
+    body {
+  font-family: "Inter", sans-serif;
+  background: #f5f5f5; /* ✅ match homepage */
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.back-link {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  color: #111; /* ✅ black */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card {
+  width: 100%;
+  max-width: 460px;
+  background: white;
+  border-radius: 15px;
+  padding: 28px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08); /* same as service cards */
+}
+
+.brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #111827, #6b7280);
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0;
+  color: #111;
+}
+
+p.sub {
+  margin: 6px 0 18px;
+  color: #555;
+  font-size: 13px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  border: 1px solid #ddd;
+  background: transparent;
+  color: #555;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tab.active {
+  background: #111;
+  color: white;
+}
+
+label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  color: #111;
+  box-sizing: border-box;
+}
+
+.btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  background: #111; 
+  color: white;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: #333;
+}
+
+/* Messages */
+.msg {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  display: none;
+  font-size: 13px;
+}
+
+.msg.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.msg.err {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Hint */
+.hint {
+  margin-top: 6px;
+  color: #777;
+  font-size: 12px;
+}
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-link">← Back to Home</a>
+
+  <div class="card">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>CRSMS Access</h1>
+        <p class="sub">Register or log in to continue.</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" type="button">Login</button>
+      <button class="tab" id="tabRegister" type="button">Register</button>
+    </div>
+
+    <form id="loginForm" autocomplete="on">
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="name@example.com" required />
+
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" required minlength="8" />
+
+      <button class="btn" id="loginBtn" type="submit">Login</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+
+    <form id="registerForm" style="display:none;" autocomplete="on">
+      <label for="regName">Full name</label>
+      <input id="regName" type="text" placeholder="Your name" required />
+
+      <label for="regEmail">Email</label>
+      <input id="regEmail" type="email" placeholder="name@example.com" required />
+
+      <label for="regPassword">Password</label>
+      <input id="regPassword" type="password" placeholder="Min 8 characters" required minlength="8" />
+      <div class="hint">Tip: use at least 8 characters.</div>
+
+      <label for="regConfirm">Confirm password</label>
+      <input id="regConfirm" type="password" placeholder="Re-type password" required minlength="8" />
+
+      <button class="btn" id="registerBtn" type="submit">Create account</button>
+      <div class="msg" id="registerMsg"></div>
+    </form>
+  </div>
+
+  <script>
+    const tabLogin = document.getElementById("tabLogin");
+    const tabRegister = document.getElementById("tabRegister");
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+
+    const loginMsg = document.getElementById("loginMsg");
+    const registerMsg = document.getElementById("registerMsg");
+
+    function showMsg(el, type, text) {
+      el.className = "msg " + (type === "ok" ? "ok" : "err");
+      el.textContent = text;
+      el.style.display = "block";
+    }
+
+    function clearMsgs() {
+      loginMsg.style.display = "none";
+      registerMsg.style.display = "none";
+    }
+
+    function setTab(active) {
+      clearMsgs();
+      if (active === "login") {
+        tabLogin.classList.add("active");
+        tabRegister.classList.remove("active");
+        loginForm.style.display = "block";
+        registerForm.style.display = "none";
+      } else {
+        tabRegister.classList.add("active");
+        tabLogin.classList.remove("active");
+        registerForm.style.display = "block";
+        loginForm.style.display = "none";
+      }
+    }
+
+    tabLogin.addEventListener("click", () => setTab("login"));
+    tabRegister.addEventListener("click", () => setTab("register"));
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMsgs();
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      const btn = document.getElementById("loginBtn");
+      btn.disabled = true;
+      btn.textContent = "Logging in...";
+
+      try {
+        const res = await fetch("http://localhost:3000/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMsg(loginMsg, "err", data.error || "Login failed");
+        } else {
+          localStorage.setItem("user", JSON.stringify(data.user));
+          showMsg(loginMsg, "ok", "Login successful ✅");
+
+          setTimeout(() => {
+            if (data.user.role === "admin") {
+            window.location.href = "admin.html";
+            } else {
+            window.location.href = "index.html";
+            }
+          }, 700);
+        }
+      } catch (err) {
+        showMsg(loginMsg, "err", "Server error");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Login";
+    });
+
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearMsgs();
+
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const confirmPassword = document.getElementById("regConfirm").value;
+
+      if (!name || !email || !password || !confirmPassword) {
+        return showMsg(registerMsg, "err", "All fields are required.");
+      }
+
+      if (password.length < 8) {
+        return showMsg(registerMsg, "err", "Password must be at least 8 characters.");
+      }
+
+      if (password !== confirmPassword) {
+        return showMsg(registerMsg, "err", "Passwords do not match.");
+      }
+
+      const btn = document.getElementById("registerBtn");
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+
+      try {
+        const res = await fetch("http://localhost:3000/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMsg(registerMsg, "err", data.error || "Registration failed");
+        } else {
+          showMsg(registerMsg, "ok", "Registered successfully ✅");
+          registerForm.reset();
+          setTimeout(() => setTab("login"), 800);
+        }
+      } catch (err) {
+        showMsg(registerMsg, "err", "Server error");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Create account";
+    });
+const params = new URLSearchParams(window.location.search);
+const mode = params.get("mode");
+
+if (mode === "register") {
+  setTab("register");
+} else {
+  setTab("login");
+}
+  </script>
+</body>
+</html>
+
