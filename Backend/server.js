@@ -227,7 +227,7 @@ app.get("/api/chat-users", async (req, res) => {
 
 /* ================= REGISTER ================= */
 
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", async (req, res) => { 
   try {
     console.log("REGISTER BODY:", req.body);
 
@@ -245,6 +245,9 @@ app.post("/api/register", async (req, res) => {
 
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
 
+    // 🔥 START TIMING HERE
+    const start = Date.now();
+
     const result = await usersCollection.insertOne({
       name,
       email,
@@ -253,16 +256,21 @@ app.post("/api/register", async (req, res) => {
       createdAt: new Date(),
     });
 
+    const time = Date.now() - start;
+
+    // ✅ CLEAN LOG FOR ANALYSIS
+    console.log(`DB_TEST,MONGO,REGISTER,${time}`);
+
+    // (optional debug)
     console.log("INSERT RESULT:", result);
 
     res.json({ message: "Registered (Mongo)" });
 
   } catch (err) {
-    console.error("❌ REGISTER ERROR:", err); // 🔥 THIS IS KEY
+    console.error("❌ REGISTER ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 /* ================= LOGIN ================= */
 
 app.post("/api/login", async (req, res) => {
