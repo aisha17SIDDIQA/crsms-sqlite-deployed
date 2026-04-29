@@ -20,10 +20,16 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
-const client = new MongoClient(
-  process.env.MONGO_URI
-);
-const TEST_MODE = process.env.TEST_MODE || "sqlite";
+let client;
+
+if (process.env.TEST_MODE === "mongo") {
+  client = new MongoClient(process.env.MONGO_URI);
+}
+let client;
+
+if (TEST_MODE === "mongo") {
+  client = new MongoClient(process.env.MONGO_URI);
+}
 
 const server = http.createServer(app);
 const io = new Server(server, {
