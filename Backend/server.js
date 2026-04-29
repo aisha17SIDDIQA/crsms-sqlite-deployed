@@ -81,8 +81,12 @@ app.post("/api/requests", async (req, res) => {
   const { name, email, message } = req.body;
   const createdAt = new Date();
 
-  const existingUser = await usersCollection.findOne({ email });
-  const isRegisteredUser = !!existingUser;
+  let isRegisteredUser = false;
+
+  if (TEST_MODE === "mongo") {
+    const existingUser = await usersCollection.findOne({ email });
+    isRegisteredUser = !!existingUser;
+  }
 
   if (TEST_MODE === "sqlite") {
     const start = Date.now();
@@ -229,38 +233,55 @@ app.get("/api/chat-users", async (req, res) => {
 
 app.post("/api/register", async (req, res) => { 
   try {
-
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    const existing = await usersCollection.findOne({ email });
-
-    if (existing) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-
     const hashed = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // 🔥 START TIMING HERE
-    const start = Date.now();
+    if (TEST_MODE === "sqlite") {
+      const start = Date.now();
 
-    const result = await usersCollection.insertOne({
-      name,
-      email,
-      password: hashed,
-      role: "user",
-      createdAt: new Date(),
-    });
+      db.get("SELECT * FROM users WHERE email = ?", [email], (err, user) => {
+        if (user) {
+          return res.status(400).json({ error: "User exists" });
+        }
 
-    const time = Date.now() - start;
+        db.run(
+          `INSERT INTO users (name, email, password, role, createdAt)
+           VALUES (?, ?, ?, ?, ?)`,
+          [name, email, hashed, "user", new Date().toISOString()],
+          function () {
+            console.log("🟦 SQLite register:", Date.now() - start, "ms");
+            res.json({ message: "Registered (SQLite)" });
+          }
+        );
+      });
+    }
 
-    // ✅ CLEAN LOG FOR ANALYSIS
-    console.log(`DB_TEST,MONGO,REGISTER,${time}`);
+    if (TEST_MODE === "mongo") {
+      const existing = await usersCollection.findOne({ email });
 
-    res.json({ message: "Registered (Mongo)" });
+      if (existing) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+
+      const start = Date.now();
+
+      await usersCollection.insertOne({
+        name,
+        email,
+        password: hashed,
+        role: "user",
+        createdAt: new Date(),
+      });
+
+      console.log("🟩 Mongo register:", Date.now() - start, "ms");
+
+      res.json({ message: "Registered (Mongo)" });
+    }
 
   } catch (err) {
     console.error("❌ REGISTER ERROR:", err);
