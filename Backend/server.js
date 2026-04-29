@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
 const client = new MongoClient(
   process.env.MONGO_URI
 );
-const TEST_MODE = process.env.TEST_MODE || "mongo";
+const TEST_MODE = process.env.TEST_MODE || "sqlite";
 
 const server = http.createServer(app);
 const io = new Server(server, {
