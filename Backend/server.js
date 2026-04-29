@@ -12,6 +12,8 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const TEST_MODE = process.env.TEST_MODE || "sqlite"; // ✅ ADD THIS HERE
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
@@ -22,12 +24,7 @@ app.get("/", (req, res) => {
 
 let client;
 
-if (process.env.TEST_MODE === "mongo") {
-  client = new MongoClient(process.env.MONGO_URI);
-}
-let client;
-
-if (TEST_MODE === "mongo") {
+if (TEST_MODE === "mongo" && process.env.MONGO_URI) {
   client = new MongoClient(process.env.MONGO_URI);
 }
 
@@ -654,7 +651,7 @@ io.on("connection", (socket) => {
 /* ================= START ================= */
 
 async function startServer() {
- if (TEST_MODE === "mongo") {
+ if (TEST_MODE === "mongo" && client) {
   await connectMongo();
 }
 
