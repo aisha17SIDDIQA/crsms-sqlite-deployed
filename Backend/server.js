@@ -399,6 +399,42 @@ app.post("/api/search-log", async (req, res) => {
   res.json({ message: "Logged ✅" });
 });
 
+app.post("/api/test-chat", async (req, res) => {
+  const { email, sender, message } = req.body;
+  const createdAt = new Date();
+
+  if (TEST_MODE === "sqlite") {
+    const start = Date.now();
+
+    db.run(
+      `INSERT INTO messages (email, sender, message, createdAt)
+       VALUES (?, ?, ?, ?)`,
+      [email, sender, message, createdAt.toISOString()],
+      function () {
+        const time = Date.now() - start;
+        console.log("🟦 SQLite chat insert:", time, "ms");
+        res.json({ time });
+      }
+    );
+  }
+
+  if (TEST_MODE === "mongo") {
+    const start = Date.now();
+
+    await client.db("crsms").collection("messages").insertOne({
+      email,
+      sender,
+      message,
+      createdAt,
+    });
+
+    const time = Date.now() - start;
+    console.log("🟩 Mongo chat insert:", time, "ms");
+
+    res.json({ time });
+  }
+});
+
 /* ================= SOCKET.IO ================= */
 
 io.on("connection", (socket) => {
